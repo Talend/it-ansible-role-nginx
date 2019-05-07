@@ -1,0 +1,12 @@
+---
+nginx_firewall: true
+
+# proxy
+nginx_proxy_enabled: false
+nginx_proxy_file_size: '16m'
+nginx_proxy_timeout: 120
+nginx_proxy_vhost: []
+
+# vhosts
+nginx_vhosts:
+  - '{{ ansible_fqdn }}'
