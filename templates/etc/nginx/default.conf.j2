@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+
+server {
+  listen 80;
+
+  server_name {{ item }};
+  root "{{ nginx_root_directory }}";
+
+{% if nginx_proxy_enabled %}
+{% for item in nginx_proxy_vhost %}
+  location {{ item.location_outside | d("/") }} {
+      proxy_pass {{ item.protocol | d("http") }}://{{ item.ip | d('127.0.0.1')}}:{{ item.port }}{{ item.location_inside | d("") }};
+  }
+{% endfor %}
+{% endif %}
+
+  # logs
+  access_log /var/log/nginx/{{ item }}.access.log;
+  error_log /var/log/nginx/{{ item }}.error.log;
+
+  # security
+  include /etc/nginx/security.conf;
+}
