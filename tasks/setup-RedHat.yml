@@ -1,0 +1,29 @@
+---
+- name: Add nginx repository
+  yum_repository:
+    name: 'nginx'
+    description: 'NGINX Repository'
+    baseurl: 'https://nginx.org/packages/centos/$releasever/$basearch/'
+    gpgkey: 'https://nginx.org/keys/nginx_signing.key'
+    gpgcheck: 'yes'
+    repo_gpgcheck: 'yes'
+    enabled: 'yes'
+
+- name: Install nginx
+  yum:
+    name: 'nginx'
+    state: 'present'
+    update_cache: 'yes'
+
+- name: Configure firewalld for nginx
+  firewalld:
+    zone: 'public'
+    service: "{{ item }}"
+    permanent: yes
+    state: enabled
+  loop:
+    - 'http'
+    - 'https'
+  notify:
+    - 'Reload firewalld'
+  when: nginx_firewall
