@@ -1,0 +1,56 @@
+---
+- name: Gather os specific variables
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- include_tasks: "setup-{{ ansible_os_family }}.yml"
+
+- name: Ensure nginx directories exists
+  file:
+    path: "{{ item }}"
+    state: 'directory'
+    owner: 'root'
+    group: 'root'
+    mode: 0755
+  loop:
+    - '/etc/nginx/sites-available'
+    - '/etc/nginx/sites-enabled'
+    - "{{ nginx_root_directory }}"
+
+- name: Configure nginx
+  template:
+    src: "{{ item }}.j2"
+    dest: "/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: 0644
+  loop:
+    - 'etc/nginx/conf.d/gzip.conf'
+    - 'etc/nginx/security.conf'
+    - 'etc/nginx/conf.d/proxy.conf'
+    - 'etc/nginx/nginx.conf'
+  notify:
+    - 'Restart nginx'
+
+- name: Create vhost(s)
+  template:
+    src: 'etc/nginx/default.conf.j2'
+    dest: "/etc/nginx/sites-available/{{ item }}.conf"
+    owner: 'root'
+    group: 'root'
+    mode: 0640
+  with_items:
+    - "{{ nginx_vhosts }}"
+  notify:
+    - 'Reload nginx'
+
+- name: Enable vhost(s)
+  file:
+    state: 'link'
+    src: "/etc/nginx/sites-available/{{ item }}.conf"
+    dest: "/etc/nginx/sites-enabled/{{ item }}"
+    owner: 'root'
+    group: 'root'
+  with_items:
+    - "{{ nginx_vhosts }}"
+  notify:
+    - 'Reload nginx'
